@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+model Company {
+  id String @id
+  name String @unique
+  people Person[]
+  meetings Meeting[]
+}
+model Person {
+  id String @id
+  name String
+  title String
+  email String
+  companyId String
+  company Company @relation(fields: [companyId], references: [id])
+  meetings MeetingAttendee[]
+  items ActionItem[]
+}
+model Series {
+  id String @id
+  name String
+  meetings Meeting[]
+}
+model Meeting {
+  id String @id
+  title String
+  date DateTime
+  duration Int
+  seriesId String
+  companyId String
+  series Series @relation(fields: [seriesId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+  attendees MeetingAttendee[]
+  rawItems Json
+  mentions ActionItemMention[]
+}
+model MeetingAttendee {
+  meetingId String
+  personId String
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id])
+  @@id([meetingId, personId])
+}
+model ActionItem {
+  id String @id
+  title String
+  description String
+  assigneeId String?
+  assignee Person? @relation(fields: [assigneeId], references: [id])
+  status String @default("PENDING")
+  dueDate DateTime?
+  firstMentionedAt DateTime
+  mentionCount Int
+  context Json
+  mentions ActionItemMention[]
+  linearIssue LinearIssue?
+}
+model ActionItemMention {
+  actionItemId String
+  meetingId String
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  @@id([actionItemId, meetingId])
+}
+model LinearIssue {
+  id String @id
+  actionItemId String @unique
+  title String
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id])
+  comments LinearComment[]
+}
+model LinearComment {
+  id String @id @default(cuid())
+  issueId String
+  key String @unique
+  body String
+  issue LinearIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+}
