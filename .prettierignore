@@ -1,0 +1,6 @@
+.cache/
+.next/
+node_modules/
+pnpm-lock.yaml
+PLAN.md
+RESEARCH.md
